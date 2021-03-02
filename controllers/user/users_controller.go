@@ -1,6 +1,7 @@
 package user
 
 import (
+	"encoding/json"
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/kasrashrz/Golang_microservice/domain/users"
@@ -19,6 +20,13 @@ func CreateUser(ctx *gin.Context) {
 	var user users.User
 	fmt.Print(user)
 	bytes, err := ioutil.ReadAll(ctx.Request.Body)
+	if err != nil {
+		//TODO: ERROR HANDLER
+		return
+	}
+	if err := json.Unmarshal(bytes, &user); err != nil{
+
+	}
 	fmt.Println(err)
 	fmt.Println(string(bytes))
 	ctx.String(http.StatusOK, "Create\n")
