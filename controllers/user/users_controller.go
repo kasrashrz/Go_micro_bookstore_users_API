@@ -1,23 +1,23 @@
 package user
 
 import (
-	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/kasrashrz/Golang_microservice/domain/users"
 	"github.com/kasrashrz/Golang_microservice/services"
+	"github.com/kasrashrz/Golang_microservice/utils/errors"
 	"net/http"
 )
 
 func CreateUser(ctx *gin.Context) {
 	var user users.User
 	if err := ctx.ShouldBindJSON(&user);err != nil{
-		fmt.Println(err)
-		//TODO: RETURN BAD REQUEST TO CALLER
+		restError := errors.NewBadRequest("invalid json body")
+		ctx.JSON(restError.Status, restError)
 		return
 	}
 	result, saveErr := services.CreateUser(user)
 	if saveErr != nil {
-		//TODO: HANDLE USER CREATION ERROR
+		ctx.JSON(saveErr.Status, saveErr)
 		return
 	}
 	ctx.JSON(http.StatusCreated, result)

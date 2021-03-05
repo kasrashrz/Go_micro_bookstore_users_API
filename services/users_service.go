@@ -1,19 +1,10 @@
 package services
 
-import "github.com/kasrashrz/Golang_microservice/domain/users"
+import (
+	"github.com/kasrashrz/Golang_microservice/domain/users"
+	"github.com/kasrashrz/Golang_microservice/utils/errors"
+)
 
-func CreateUser(user users.User) (*users.User, error){
-
-	return &user, nil
+func CreateUser(user users.User) (users.User, *errors.RestError){
+	return user, nil
 }
-
-//obj = {
-//"1":{
-//  "message": "User XXX Not Found",
-//  "status": 404,
-//  "error": "Not Found"
-//},
-//{
-//  ""
-//}
-//}
