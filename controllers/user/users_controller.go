@@ -2,37 +2,25 @@ package user
 
 import (
 	"encoding/json"
-	//"encoding/json"
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/kasrashrz/Golang_microservice/domain/users"
+	"github.com/kasrashrz/Golang_microservice/services"
 	"io/ioutil"
 	"net/http"
 )
 
-//type UserController interface {
-//	CreateUser()
-//	ReadUser()
-//	UpdateUser()
-//	DeleteUser()
-//}
-
 func CreateUser(ctx *gin.Context) {
 	var user users.User
-	bytes, err := ioutil.ReadAll(ctx.Request.Body)
-	if err != nil {
-		//TODO: ERROR HANDLER
+	if err := ctx.ShouldBindJSON();err != nil{
+
+	}
+	result, saveErr := services.CreateUser(user)
+	if saveErr != nil {
+		//TODO: HANDLE USER CREATION ERROR
 		return
 	}
-	//TODO: JSON UNMARSHAL
-	if err := json.Unmarshal(bytes, &user); err != nil{
-		fmt.Println(err.Error())
-		//TODO: HANDLE JSON ERROR
-		return
-	}
-	fmt.Print(string(bytes))
-	fmt.Print(user)
-	ctx.String(http.StatusOK, "Create\n")
+	ctx.JSON(http.StatusCreated, result)
 }
 func ReadUser(ctx *gin.Context) {
 	ctx.String(http.StatusOK, "Read\n")
