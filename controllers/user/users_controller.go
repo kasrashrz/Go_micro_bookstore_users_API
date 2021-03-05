@@ -1,19 +1,19 @@
 package user
 
 import (
-	"encoding/json"
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/kasrashrz/Golang_microservice/domain/users"
 	"github.com/kasrashrz/Golang_microservice/services"
-	"io/ioutil"
 	"net/http"
 )
 
 func CreateUser(ctx *gin.Context) {
 	var user users.User
-	if err := ctx.ShouldBindJSON();err != nil{
-
+	if err := ctx.ShouldBindJSON(&user);err != nil{
+		fmt.Println(err)
+		//TODO: RETURN BAD REQUEST TO CALLER
+		return
 	}
 	result, saveErr := services.CreateUser(user)
 	if saveErr != nil {
