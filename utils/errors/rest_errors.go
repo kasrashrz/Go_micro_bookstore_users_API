@@ -8,7 +8,7 @@ type RestErr struct {
 	Error   string `json:"error"`
 }
 
-func NewBadRequest(message string) *RestErr {
+func BadRequest(message string) *RestErr {
 	return &RestErr{
 		Message: message,
 		Status:  http.StatusBadRequest,

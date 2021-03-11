@@ -9,7 +9,7 @@ var(
 	usersDB = make(map[int64]*User)
 )
 
-func (user User) Get() *errors.RestErr{
+func (user *User) Get() *errors.RestErr{
 	result := usersDB[user.Id]
 	if result == nil{
 		return errors.NewNotFoundError(fmt.Sprintf("user %d not found", user.Id))
@@ -23,6 +23,14 @@ func (user User) Get() *errors.RestErr{
 	return nil
 }
 
-func (user User) Create() *errors.RestErr {
+func (user *User) Create() *errors.RestErr {
+	currentUser := usersDB[user.Id]
+	if currentUser != nil{
+		if currentUser.Email == user.Email {
+			return  errors.BadRequest(fmt.Sprintf("user %d already registered", user.Id))
+		}
+		return errors.BadRequest(fmt.Sprintf("user %d already exists", user.Id))
+	}
+	usersDB[user.Id] = user
 	return nil
 }
