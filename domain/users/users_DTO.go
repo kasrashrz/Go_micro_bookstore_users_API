@@ -19,5 +19,8 @@ func (user *User) Validate() *errors.RestErr {
 	if user.Email == "" {
 		return errors.BadRequest("invalid email address")
 	}
+	if strings.Contains(user.Email, "@") == false {
+		return errors.BadRequest("invalid email address")
+	}
 	return nil
 }
