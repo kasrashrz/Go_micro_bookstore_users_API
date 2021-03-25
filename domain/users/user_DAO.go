@@ -14,7 +14,6 @@ func (user *User) Get() *errors.RestErr {
 	if result == nil {
 		return errors.NotFoundError(fmt.Sprintf("user %d not found", user.Id))
 	}
-
 	user.Id = result.Id
 	user.Email = result.Email
 	user.DateCreated = result.DateCreated
