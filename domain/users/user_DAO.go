@@ -2,8 +2,8 @@ package users
 
 import (
 	"fmt"
+	"github.com/kasrashrz/Golang_microservice/utils"
 	"github.com/kasrashrz/Golang_microservice/utils/errors"
-	"time"
 )
 
 var (
@@ -31,9 +31,7 @@ func (user *User) Create() *errors.RestErr {
 		}
 		return errors.BadRequest(fmt.Sprintf("user %d already exists", user.Id))
 	}
-	now := time.Now()
-	user.DateCreated = now.Format("2006-01-02T15:04:05Z")
-
+	user.DateCreated = utils.GetCurrentTimeString()
 	usersDB[user.Id] = user
 	return nil
 }
