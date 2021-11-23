@@ -3,7 +3,7 @@ package dates
 import "time"
 
 const (
-	apiDateLayout = "02-01-2006T15:04:05Z"
+	apiDateLayout = "2006-01-02T15:04:05Z"
 )
 
 func GetNow() time.Time {
@@ -14,3 +14,4 @@ func GetCurrentTimeString() string{
 	DateCreated := GetNow().Format(apiDateLayout)
 	return DateCreated
 }
+
