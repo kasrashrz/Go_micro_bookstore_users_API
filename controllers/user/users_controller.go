@@ -6,9 +6,8 @@ import (
 	"github.com/kasrashrz/Golang_microservice/services"
 	"github.com/kasrashrz/Golang_microservice/utils/errors"
 	"net/http"
+	"strconv"
 )
-
-var UserDB = make(map[int64]*users.User)
 
 func CreateUser(ctx *gin.Context) {
 	var user users.User
@@ -27,17 +26,27 @@ func CreateUser(ctx *gin.Context) {
 
 func ReadUser(ctx *gin.Context) {
 	user := users.User{}
-	result := UserDB[user.Id]
-	if result != nil{
+
+	id := ctx.Param("user_id")
+	idToInt, _ := strconv.Atoi(id)
+	UID := int64(idToInt)
+
+	user.Id = UID
+
+	result, err := services.GetUser(user.Id)
+
+	if err != nil {
+		ctx.JSON(err.Status, err)
 		return
 	}
-
 	ctx.JSON(http.StatusOK, result)
 	return
 }
+
 func UpdateUser(ctx *gin.Context) {
 	ctx.String(http.StatusOK, "Update\n", ctx.Param("user_id"))
 }
+
 func DeleteUser(ctx *gin.Context) {
 	ctx.String(http.StatusNotImplemented, "Delete\n", ctx.Param("user_id"))
 }
