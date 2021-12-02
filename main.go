@@ -2,6 +2,6 @@ package main
 
 import "github.com/kasrashrz/Golang_microservice/app"
 
-func main(){
+func main() {
 	app.StartApplication()
 }

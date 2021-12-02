@@ -1,17 +1,15 @@
 package users
 
 import (
-	"fmt"
 	. "github.com/kasrashrz/Golang_microservice/datastore/mysql/user_db"
 	"github.com/kasrashrz/Golang_microservice/utils/dates"
 	"github.com/kasrashrz/Golang_microservice/utils/errors"
-	"strings"
+	"github.com/kasrashrz/Golang_microservice/utils/mysql_utils"
 )
 
 const (
-	indexUniqueEmail = "Duplicate entry"
-	errorNoRows      = "no rows in result set"
 	queryInsertUser  = "INSERT INTO users(first_name, last_name, email, date_created) VALUES(?, ?, ?, ?);"
+	queryUpdateUser  = "UPDATE users SET first_name=?, last_name=?, email=? WHERE id=?;"
 	queryReadOneUser = "SELECT * FROM users WHERE id = ?;"
 )
 
@@ -23,11 +21,9 @@ func (user *User) Get() *errors.RestErr {
 	defer statement.Close()
 
 	result := statement.QueryRow(user.Id)
-	if err := result.Scan(&user.Id, &user.Firstname, &user.Lastname, &user.Email , &user.DateCreated); err != nil {
-		if strings.Contains(err.Error(), errorNoRows){
-			return errors.NotFoundError(fmt.Sprintf("user %d not found", user.Id))
-		}
-		return errors.InternalServerError(fmt.Sprintf("error when trying to get user %d: %s", user.Id, err.Error()))
+
+	if readErr := result.Scan(&user.Id, &user.Firstname, &user.Lastname, &user.Email, &user.DateCreated); readErr != nil {
+		return mysql_utils.ParseError(readErr)
 	}
 	return nil
 }
@@ -42,23 +38,30 @@ func (user *User) Create() *errors.RestErr {
 
 	user.DateCreated = dates.GetCurrentTimeString()
 
-	result, err := Client.Exec(queryInsertUser, user.Firstname, user.Lastname, user.Email, user.DateCreated)
-
-	if err != nil {
-		fmt.Println(err)
-		if strings.Contains(err.Error(), indexUniqueEmail) {
-			return errors.BadRequest(fmt.Sprintf("email %s already registered", user.Email))
-		}
-		return errors.BadRequest(fmt.Sprintf("user %d already exists", user.Id))
+	result, saveErr := Client.Exec(queryInsertUser, user.Firstname, user.Lastname, user.Email, user.DateCreated)
+	if saveErr != nil {
+		return mysql_utils.ParseError(saveErr)
 	}
 
-	userID, nerr := result.LastInsertId()
-
-	if nerr != nil {
-		errors.InternalServerError(fmt.Sprintf("error when trying to save user: %v", err.Error()))
+	userID, err := result.LastInsertId()
+	if err != nil {
+		return mysql_utils.ParseError(err)
 	}
 
 	user.Id = userID
+	return nil
+}
 
+func (user *User) Update() *errors.RestErr {
+	statement, err := Client.Prepare(queryUpdateUser)
+	if err != nil {
+		return errors.InternalServerError(err.Error())
+	}
+	defer statement.Close()
+
+	_, err = statement.Exec(user.Firstname, user.Lastname, user.Email, user.Id)
+	if err != nil {
+		return mysql_utils.ParseError(err)
+	}
 	return nil
 }

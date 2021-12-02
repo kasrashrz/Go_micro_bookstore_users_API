@@ -11,7 +11,7 @@ import (
 
 func CreateUser(ctx *gin.Context) {
 	var user users.User
-	if err := ctx.ShouldBindJSON(&user);err != nil{
+	if err := ctx.ShouldBindJSON(&user); err != nil {
 		restError := errors.BadRequest("invalid json body")
 		ctx.JSON(restError.Status, restError)
 		return
@@ -25,15 +25,15 @@ func CreateUser(ctx *gin.Context) {
 }
 
 func ReadUser(ctx *gin.Context) {
-	user := users.User{}
 
-	id := ctx.Param("user_id")
-	idToInt, _ := strconv.Atoi(id)
-	UID := int64(idToInt)
+	userId, userErr := strconv.ParseInt(ctx.Param("user_id"), 10, 64)
+	if userErr != nil {
+		err := errors.BadRequest("user id should be number")
+		ctx.JSON(err.Status, err)
+		return
+	}
 
-	user.Id = UID
-
-	result, err := services.GetUser(user.Id)
+	result, err := services.GetUser(userId)
 
 	if err != nil {
 		ctx.JSON(err.Status, err)
@@ -44,7 +44,28 @@ func ReadUser(ctx *gin.Context) {
 }
 
 func UpdateUser(ctx *gin.Context) {
-	ctx.String(http.StatusOK, "Update\n", ctx.Param("user_id"))
+	var user users.User
+
+	userId, userErr := strconv.ParseInt(ctx.Param("user_id"), 10, 64)
+
+	if userErr != nil {
+		err := errors.BadRequest("user id should be number")
+		ctx.JSON(err.Status, err)
+		return
+	}
+
+	user.Id = userId
+
+	if err := ctx.ShouldBindJSON(&user); err != nil {
+		restError := errors.BadRequest("invalid json body")
+		ctx.JSON(restError.Status, restError)
+		return
+	}
+	result, err := services.UpdateUser(user)
+	if err != nil {
+		ctx.JSON(err.Status, err)
+	}
+	ctx.JSON(http.StatusOK, result)
 }
 
 func DeleteUser(ctx *gin.Context) {

@@ -10,8 +10,7 @@ func GetNow() time.Time {
 	return time.Now().UTC()
 }
 
-func GetCurrentTimeString() string{
+func GetCurrentTimeString() string {
 	DateCreated := GetNow().Format(apiDateLayout)
 	return DateCreated
 }
-

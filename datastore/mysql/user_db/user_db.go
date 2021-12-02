@@ -11,8 +11,8 @@ import (
 const (
 	mysql_users_usersname = "mysql_users_username"
 	mysql_users_passwords = "mysql_users_password"
-	mysql_users_host = "mysql_users_host"
-	mysql_users_db = "mysql_users_db"
+	mysql_users_host      = "mysql_users_host"
+	mysql_users_db        = "mysql_users_db"
 )
 
 var (
@@ -20,8 +20,8 @@ var (
 
 	username = os.Getenv(mysql_users_usersname)
 	password = os.Getenv(mysql_users_passwords)
-	host = os.Getenv(mysql_users_host)
-	db = os.Getenv(mysql_users_db)
+	host     = os.Getenv(mysql_users_host)
+	db       = os.Getenv(mysql_users_db)
 )
 
 func init() {
@@ -41,7 +41,7 @@ func init() {
 	if err = Client.Ping(); err != nil {
 		panic(err)
 	}
-	//mysql.SetLogger()
+	//mysql_utils.SetLogger()
 	log.Println("connected to database")
 
 }

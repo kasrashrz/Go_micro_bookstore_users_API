@@ -15,10 +15,31 @@ func CreateUser(user users.User) (*users.User, *errors.RestErr) {
 	return &user, nil
 }
 
-func GetUser (userId int64) (*users.User, *errors.RestErr){
+func GetUser(userId int64) (*users.User, *errors.RestErr) {
 	result := &users.User{Id: userId}
 	if err := result.Get(); err != nil {
 		return nil, err
 	}
 	return result, nil
+}
+
+func UpdateUser(user users.User) (*users.User, *errors.RestErr) {
+	current, err := GetUser(user.Id)
+	if err != nil {
+		return nil, err
+	}
+
+	current.Firstname = user.Firstname
+	current.Lastname = user.Lastname
+	current.Email = user.Email
+
+	if err := user.Validate(); err != nil {
+		return nil, err
+	}
+
+	if err := user.Update(); err != nil {
+		return nil, err
+	}
+
+	return current, nil
 }
