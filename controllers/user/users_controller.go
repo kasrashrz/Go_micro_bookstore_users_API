@@ -69,13 +69,24 @@ func Update(ctx *gin.Context) {
 func Delete(ctx *gin.Context) {
 	userId, userErr := functionalities.GetUserID(ctx.Param("user_id"))
 	if userErr != nil {
-		 ctx.JSON(userErr.Status, userErr)
+		ctx.JSON(userErr.Status, userErr)
 		return
 	}
-	if err := services.DeleteUser(userId); err != nil{
+	if err := services.DeleteUser(userId); err != nil {
 		ctx.JSON(err.Status, err)
 		return
 	}
 	ctx.JSON(http.StatusOK, gin.H{"status": "deleted"})
+	return
+}
+
+func Search(ctx *gin.Context) {
+	status := ctx.Query("status")
+	users , err := services.Search(status)
+	if err != nil {
+		ctx.JSON(err.Status, err)
+		return
+	}
+	ctx.JSON(http.StatusOK, users)
 	return
 }
