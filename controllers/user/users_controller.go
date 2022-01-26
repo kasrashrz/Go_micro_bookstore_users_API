@@ -5,11 +5,12 @@ import (
 	"github.com/kasrashrz/Golang_microservice/domain/users"
 	"github.com/kasrashrz/Golang_microservice/services"
 	"github.com/kasrashrz/Golang_microservice/utils/errors"
+	"github.com/kasrashrz/Golang_microservice/utils/functionalities"
 	"net/http"
 	"strconv"
 )
 
-func CreateUser(ctx *gin.Context) {
+func Create(ctx *gin.Context) {
 	var user users.User
 	if err := ctx.ShouldBindJSON(&user); err != nil {
 		restError := errors.BadRequest("invalid json body")
@@ -24,17 +25,14 @@ func CreateUser(ctx *gin.Context) {
 	ctx.JSON(http.StatusCreated, result)
 }
 
-func ReadUser(ctx *gin.Context) {
-
-	userId, userErr := strconv.ParseInt(ctx.Param("user_id"), 10, 64)
+func Read(ctx *gin.Context) {
+	userId, userErr := functionalities.GetUserID(ctx.Param("user_id"))
 	if userErr != nil {
-		err := errors.BadRequest("user id should be number")
-		ctx.JSON(err.Status, err)
+		ctx.JSON(userErr.Status, userErr)
 		return
 	}
 
 	result, err := services.GetUser(userId)
-
 	if err != nil {
 		ctx.JSON(err.Status, err)
 		return
@@ -43,9 +41,8 @@ func ReadUser(ctx *gin.Context) {
 	return
 }
 
-func UpdateUser(ctx *gin.Context) {
+func Update(ctx *gin.Context) {
 	var user users.User
-
 	userId, userErr := strconv.ParseInt(ctx.Param("user_id"), 10, 64)
 
 	if userErr != nil {
@@ -61,13 +58,24 @@ func UpdateUser(ctx *gin.Context) {
 		ctx.JSON(restError.Status, restError)
 		return
 	}
-	result, err := services.UpdateUser(user)
+	isPartial := ctx.Request.Method == http.MethodPatch
+	result, err := services.UpdateUser(isPartial, user)
 	if err != nil {
 		ctx.JSON(err.Status, err)
 	}
 	ctx.JSON(http.StatusOK, result)
 }
 
-func DeleteUser(ctx *gin.Context) {
-	ctx.String(http.StatusNotImplemented, "Delete\n", ctx.Param("user_id"))
+func Delete(ctx *gin.Context) {
+	userId, userErr := functionalities.GetUserID(ctx.Param("user_id"))
+	if userErr != nil {
+		 ctx.JSON(userErr.Status, userErr)
+		return
+	}
+	if err := services.DeleteUser(userId); err != nil{
+		ctx.JSON(err.Status, err)
+		return
+	}
+	ctx.JSON(http.StatusOK, gin.H{"status": "deleted"})
+	return
 }

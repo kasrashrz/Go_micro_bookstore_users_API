@@ -17,7 +17,6 @@ const (
 
 var (
 	Client *sql.DB
-
 	username = os.Getenv(mysql_users_usersname)
 	password = os.Getenv(mysql_users_passwords)
 	host     = os.Getenv(mysql_users_host)
@@ -41,7 +40,6 @@ func init() {
 	if err = Client.Ping(); err != nil {
 		panic(err)
 	}
-	//mysql_utils.SetLogger()
 	log.Println("connected to database")
 
 }

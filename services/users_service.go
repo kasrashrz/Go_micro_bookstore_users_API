@@ -15,26 +15,36 @@ func CreateUser(user users.User) (*users.User, *errors.RestErr) {
 	return &user, nil
 }
 
-func GetUser(userId int64) (*users.User, *errors.RestErr) {
-	result := &users.User{Id: userId}
+func GetUser(userID int64) (*users.User, *errors.RestErr) {
+	result := &users.User{Id: userID}
 	if err := result.Get(); err != nil {
 		return nil, err
 	}
 	return result, nil
 }
 
-func UpdateUser(user users.User) (*users.User, *errors.RestErr) {
+func UpdateUser(isPartial bool, user users.User) (*users.User, *errors.RestErr) {
 	current, err := GetUser(user.Id)
 	if err != nil {
 		return nil, err
 	}
-
-	current.Firstname = user.Firstname
-	current.Lastname = user.Lastname
-	current.Email = user.Email
-
 	if err := user.Validate(); err != nil {
 		return nil, err
+	}
+	if !isPartial {
+		if user.Firstname != "" {
+			current.Firstname = user.Firstname
+		}
+		if user.Lastname != "" {
+			current.Lastname = user.Lastname
+		}
+		if user.Email != "" {
+			current.Email = user.Email
+		}
+	} else {
+		current.Firstname = user.Firstname
+		current.Lastname = user.Lastname
+		current.Email = user.Email
 	}
 
 	if err := user.Update(); err != nil {
@@ -42,4 +52,15 @@ func UpdateUser(user users.User) (*users.User, *errors.RestErr) {
 	}
 
 	return current, nil
+}
+
+func DeleteUser(userID int64) *errors.RestErr {
+	current, err := GetUser(userID)
+	if err != nil {
+		return err
+	}
+	if err := current.Delete(current); err != nil {
+		return err
+	}
+	return nil
 }
