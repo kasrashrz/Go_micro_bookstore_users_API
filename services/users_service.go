@@ -2,6 +2,8 @@ package services
 
 import (
 	"github.com/kasrashrz/Golang_microservice/domain/users"
+	"github.com/kasrashrz/Golang_microservice/utils/crypto_utils"
+	"github.com/kasrashrz/Golang_microservice/utils/dates"
 	"github.com/kasrashrz/Golang_microservice/utils/errors"
 )
 
@@ -9,6 +11,11 @@ func CreateUser(user users.User) (*users.User, *errors.RestErr) {
 	if err := user.Validate(); err != nil {
 		return nil, err
 	}
+
+	user.Status = users.StatusActive
+	user.DateCreated = dates.GetNowDbFormat()
+	user.Password =  crypto_utils.GetMd5(user.Password)
+
 	if err := user.Create(); err != nil {
 		return nil, err
 	}
@@ -65,7 +72,7 @@ func DeleteUser(userID int64) *errors.RestErr {
 	return nil
 }
 
-func Search(status string) ([]users.User, *errors.RestErr){
+func Search(status string) (users.Users, *errors.RestErr) {
 	dao := users.User{}
 	return dao.FindByStatus(status)
 }

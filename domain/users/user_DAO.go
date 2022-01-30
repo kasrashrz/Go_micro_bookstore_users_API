@@ -9,11 +9,11 @@ import (
 )
 
 const (
-	queryInsertUser       = "INSERT INTO users(first_name, last_name, email, date_created) VALUES(?, ?, ?, ?);"
+	queryInsertUser       = "INSERT INTO users(first_name, last_name, email, date_created, password, status) VALUES(?, ?, ?, ?, ?, ?);"
 	queryUpdateUser       = "UPDATE users SET first_name=?, last_name=?, email=? WHERE id=?;"
-	queryReadOneUser      = "SELECT * FROM users WHERE id = ?;"
+	queryReadOneUser      = "SELECT id, first_name, last_name, email, date_created, status FROM users WHERE id = ?;"
 	queryDeleteOneUser    = "DELETE FROM users WHERE id = ?;"
-	queryFindUserByStatus = "SELECT id, first_name, last_name, email, date_created, status FROM users WHERE status = ?;"
+	queryFindUserByStatus = "SELECT id, first_name, last_name, email, date_created FROM users WHERE status = ?;"
 )
 
 func (user *User) Get() *errors.RestErr {
@@ -25,7 +25,11 @@ func (user *User) Get() *errors.RestErr {
 
 	result := statement.QueryRow(user.Id)
 
-	if readErr := result.Scan(&user.Id, &user.Firstname, &user.Lastname, &user.Email, &user.DateCreated); readErr != nil {
+	if readErr := result.Scan(&user.Id,
+		&user.Firstname,
+		&user.Lastname,
+		&user.Email,
+		&user.DateCreated); readErr != nil {
 		return mysql_utils.ParseError(readErr)
 	}
 	return nil
@@ -39,9 +43,14 @@ func (user *User) Create() *errors.RestErr {
 
 	defer statement.Close()
 
-	user.DateCreated = dates.GetCurrentTimeString()
-
-	result, saveErr := Client.Exec(queryInsertUser, user.Firstname, user.Lastname, user.Email, user.DateCreated)
+	user.DateCreated = dates.GetNowDbFormat()
+	result, saveErr := Client.Exec(queryInsertUser,
+		user.Firstname,
+		user.Lastname,
+		user.Email,
+		user.DateCreated,
+		user.Password,
+		user.Status)
 	if saveErr != nil {
 		return mysql_utils.ParseError(saveErr)
 	}
@@ -111,7 +120,7 @@ func (user *User) FindByStatus(status string) ([]User, *errors.RestErr) {
 		results = append(results, user)
 	}
 
-	if len(results) == 0{
+	if len(results) == 0 {
 		return nil, errors.NotFoundError(fmt.Sprintf("no users matching status %s", status))
 	}
 

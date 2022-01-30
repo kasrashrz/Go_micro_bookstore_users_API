@@ -16,7 +16,7 @@ const (
 )
 
 var (
-	Client *sql.DB
+	Client   *sql.DB
 	username = os.Getenv(mysql_users_usersname)
 	password = os.Getenv(mysql_users_passwords)
 	host     = os.Getenv(mysql_users_host)

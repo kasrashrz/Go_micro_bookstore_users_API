@@ -5,6 +5,10 @@ import (
 	"strings"
 )
 
+const (
+	StatusActive = "active"
+)
+
 type User struct {
 	Id          int64  `json:"id"`
 	Firstname   string `json:"first_name"`
@@ -12,9 +16,9 @@ type User struct {
 	Email       string `json:"email"`
 	DateCreated string `json:"date_created"`
 	Status      string `json:"status"`
-	Password    string `json:"-  "`
+	Password    string `json:"password"`
 }
-
+type Users []User
 // User is valid or not
 func (user *User) Validate() *errors.RestErr {
 	user.Firstname = strings.TrimSpace(user.Firstname)
@@ -25,6 +29,10 @@ func (user *User) Validate() *errors.RestErr {
 	}
 	if strings.Contains(user.Email, "@") == false {
 		return errors.BadRequest("invalid email address")
+	}
+	user.Password = strings.TrimSpace(user.Password)
+	if user.Password == "" {
+		return errors.BadRequest("invalid password")
 	}
 	return nil
 }
