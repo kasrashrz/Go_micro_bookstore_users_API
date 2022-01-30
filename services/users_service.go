@@ -14,7 +14,7 @@ func CreateUser(user users.User) (*users.User, *errors.RestErr) {
 
 	user.Status = users.StatusActive
 	user.DateCreated = dates.GetNowDbFormat()
-	user.Password =  crypto_utils.GetMd5(user.Password)
+	user.Password = crypto_utils.GetMd5(user.Password)
 
 	if err := user.Create(); err != nil {
 		return nil, err

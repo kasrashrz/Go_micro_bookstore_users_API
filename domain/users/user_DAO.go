@@ -3,9 +3,9 @@ package users
 import (
 	"fmt"
 	. "github.com/kasrashrz/Golang_microservice/datastore/mysql/user_db"
+	"github.com/kasrashrz/Golang_microservice/logger"
 	"github.com/kasrashrz/Golang_microservice/utils/dates"
 	"github.com/kasrashrz/Golang_microservice/utils/errors"
-	"github.com/kasrashrz/Golang_microservice/utils/mysql_utils"
 )
 
 const (
@@ -13,13 +13,14 @@ const (
 	queryUpdateUser       = "UPDATE users SET first_name=?, last_name=?, email=? WHERE id=?;"
 	queryReadOneUser      = "SELECT id, first_name, last_name, email, date_created, status FROM users WHERE id = ?;"
 	queryDeleteOneUser    = "DELETE FROM users WHERE id = ?;"
-	queryFindUserByStatus = "SELECT id, first_name, last_name, email, date_created FROM users WHERE status = ?;"
+	queryFindUserByStatus = "SELECT id, first_name, last_name, email, date_created, status FROM users WHERE status = ?;"
 )
 
 func (user *User) Get() *errors.RestErr {
 	statement, err := Client.Prepare(queryReadOneUser)
 	if err != nil {
-		return errors.InternalServerError(err.Error())
+		logger.Error("error when trying to prepare get user statement", err)
+		return errors.InternalServerError("something went wrong")
 	}
 	defer statement.Close()
 
@@ -29,8 +30,12 @@ func (user *User) Get() *errors.RestErr {
 		&user.Firstname,
 		&user.Lastname,
 		&user.Email,
-		&user.DateCreated); readErr != nil {
-		return mysql_utils.ParseError(readErr)
+		&user.DateCreated,
+		&user.Status); readErr != nil {
+
+		logger.Error("error when trying to get user by id", readErr)
+		return errors.InternalServerError("something went wrong")
+
 	}
 	return nil
 }
@@ -38,7 +43,8 @@ func (user *User) Get() *errors.RestErr {
 func (user *User) Create() *errors.RestErr {
 	statement, err := Client.Prepare(queryInsertUser)
 	if err != nil {
-		return errors.InternalServerError(err.Error())
+		logger.Error("error when trying to save user", err)
+		return errors.InternalServerError("something went wrong")
 	}
 
 	defer statement.Close()
@@ -52,14 +58,14 @@ func (user *User) Create() *errors.RestErr {
 		user.Password,
 		user.Status)
 	if saveErr != nil {
-		return mysql_utils.ParseError(saveErr)
+		logger.Error("error when trying to save user statement", saveErr)
+		return errors.InternalServerError("something went wrong")
 	}
-
 	userID, err := result.LastInsertId()
 	if err != nil {
-		return mysql_utils.ParseError(err)
+		logger.Error("error when trying to get last inserted id after creating a new user", err)
+		return errors.InternalServerError("something went wrong")
 	}
-
 	user.Id = userID
 	return nil
 }
@@ -67,13 +73,15 @@ func (user *User) Create() *errors.RestErr {
 func (user *User) Update() *errors.RestErr {
 	statement, err := Client.Prepare(queryUpdateUser)
 	if err != nil {
-		return errors.InternalServerError(err.Error())
+		logger.Error("error when trying to prepare update user statement", err)
+		return errors.InternalServerError("something went wrong")
 	}
 	defer statement.Close()
 
 	_, err = statement.Exec(user.Firstname, user.Lastname, user.Email, user.Id)
 	if err != nil {
-		return mysql_utils.ParseError(err)
+		logger.Error("error when trying to update user", err)
+		return errors.InternalServerError("something went wrong")
 	}
 	return nil
 }
@@ -81,12 +89,14 @@ func (user *User) Update() *errors.RestErr {
 func (user *User) Delete(*User) *errors.RestErr {
 	statement, err := Client.Prepare(queryDeleteOneUser)
 	if err != nil {
-		return errors.InternalServerError(err.Error())
+		logger.Error("error when trying to prepare delete user statement", err)
+		return errors.InternalServerError("something went wrong")
 	}
 	defer statement.Close()
 
 	if _, err := statement.Exec(user.Id); err != nil {
-		return mysql_utils.ParseError(err)
+		logger.Error("error when trying to prepare delete user", err)
+		return errors.InternalServerError("something went wrong")
 	}
 
 	return nil
@@ -95,14 +105,16 @@ func (user *User) Delete(*User) *errors.RestErr {
 func (user *User) FindByStatus(status string) ([]User, *errors.RestErr) {
 	statement, err := Client.Prepare(queryFindUserByStatus)
 	if err != nil {
-		return nil, errors.InternalServerError(err.Error())
+		logger.Error("error when trying to prepare find user by status statement", err)
+		return nil, errors.InternalServerError("something went wrong")
 	}
 	defer statement.Close()
 
 	rows, err := statement.Query(status)
 
 	if err != nil {
-		return nil, errors.InternalServerError(err.Error())
+		logger.Error("error when trying to find user by status", err)
+		return nil, errors.InternalServerError("something went wrong")
 	}
 	defer rows.Close()
 
@@ -115,7 +127,8 @@ func (user *User) FindByStatus(status string) ([]User, *errors.RestErr) {
 			&user.Email,
 			&user.DateCreated,
 			&user.Status); err != nil {
-			return nil, mysql_utils.ParseError(err)
+			logger.Error("error when scan user row into user struct", err)
+			return nil,errors.InternalServerError("something went wrong")
 		}
 		results = append(results, user)
 	}
