@@ -128,14 +128,12 @@ func (user *User) FindByStatus(status string) ([]User, *errors.RestErr) {
 			&user.DateCreated,
 			&user.Status); err != nil {
 			logger.Error("error when scan user row into user struct", err)
-			return nil,errors.InternalServerError("something went wrong")
+			return nil, errors.InternalServerError("something went wrong")
 		}
 		results = append(results, user)
 	}
-
 	if len(results) == 0 {
 		return nil, errors.NotFoundError(fmt.Sprintf("no users matching status %s", status))
 	}
-
 	return results, nil
 }
