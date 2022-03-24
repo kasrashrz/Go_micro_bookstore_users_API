@@ -4,16 +4,18 @@ import (
 	"fmt"
 	. "github.com/kasrashrz/Golang_microservice/datastore/mysql/user_db"
 	"github.com/kasrashrz/Golang_microservice/logger"
+	"github.com/kasrashrz/Golang_microservice/utils/crypto_utils"
 	"github.com/kasrashrz/Golang_microservice/utils/dates"
 	"github.com/kasrashrz/Golang_microservice/utils/errors"
 )
 
 const (
-	queryInsertUser       = "INSERT INTO users(first_name, last_name, email, date_created, password, status) VALUES(?, ?, ?, ?, ?, ?);"
-	queryUpdateUser       = "UPDATE users SET first_name=?, last_name=?, email=? WHERE id=?;"
-	queryReadOneUser      = "SELECT id, first_name, last_name, email, date_created, status FROM users WHERE id = ?;"
-	queryDeleteOneUser    = "DELETE FROM users WHERE id = ?;"
-	queryFindUserByStatus = "SELECT id, first_name, last_name, email, date_created, status FROM users WHERE status = ?;"
+	queryInsertUser         = "INSERT INTO users(first_name, last_name, email, date_created, password, status) VALUES(?, ?, ?, ?, ?, ?);"
+	queryUpdateUser         = "UPDATE users SET first_name=?, last_name=?, email=? WHERE id=?;"
+	queryReadOneUser        = "SELECT id, first_name, last_name, email, date_created, status FROM users WHERE id = ?;"
+	queryDeleteOneUser      = "DELETE FROM users WHERE id = ?;"
+	queryFindByStatus       = "SELECT id, first_name, last_name, email, date_created, status FROM users WHERE status = ?;"
+	queryFindByEmailAndPass = "SELECT first_name, last_name, email, date_created, status FROM users WHERE email = ? AND password = ?;"
 )
 
 func (user *User) Get() *errors.RestErr {
@@ -33,8 +35,8 @@ func (user *User) Get() *errors.RestErr {
 		&user.DateCreated,
 		&user.Status); readErr != nil {
 
-		logger.Error("error when trying to get user by id", readErr)
-		return errors.InternalServerError("something went wrong")
+		//logger.Error("error when trying to get user by id", readErr)
+		return errors.NotFoundError("user not found")
 
 	}
 	return nil
@@ -103,7 +105,7 @@ func (user *User) Delete(*User) *errors.RestErr {
 }
 
 func (user *User) FindByStatus(status string) ([]User, *errors.RestErr) {
-	statement, err := Client.Prepare(queryFindUserByStatus)
+	statement, err := Client.Prepare(queryFindByStatus)
 	if err != nil {
 		logger.Error("error when trying to prepare find user by status statement", err)
 		return nil, errors.InternalServerError("something went wrong")
@@ -136,4 +138,27 @@ func (user *User) FindByStatus(status string) ([]User, *errors.RestErr) {
 		return nil, errors.NotFoundError(fmt.Sprintf("no users matching status %s", status))
 	}
 	return results, nil
+}
+
+func (user *User) FindByEmailAndPassword() *errors.RestErr {
+	statement, err := Client.Prepare(queryFindByEmailAndPass)
+	if err != nil {
+		logger.Error("error when trying to prepare get user statement", err)
+		return errors.InternalServerError("something went wrong")
+	}
+	defer statement.Close()
+
+	queryResult := statement.QueryRow(user.Email, crypto_utils.GetMd5(user.Password))
+
+	if readErr := queryResult.Scan(
+		&user.Firstname,
+		&user.Lastname,
+		&user.Email,
+		&user.DateCreated,
+		&user.Status,
+	); readErr != nil {
+		//logger.Error("error when trying to get user by id", readErr)
+		return errors.NotFoundError("user not found")
+	}
+	return nil
 }

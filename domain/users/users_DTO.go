@@ -26,14 +26,14 @@ func (user *User) Validate() *errors.RestErr {
 	user.Lastname = strings.TrimSpace(user.Lastname)
 	user.Email = strings.TrimSpace(strings.ToLower(user.Email))
 	if user.Email == "" {
-		return errors.BadRequest("invalid email address")
+		return errors.BadRequestError("invalid email address")
 	}
 	if strings.Contains(user.Email, "@") == false {
-		return errors.BadRequest("invalid email address")
+		return errors.BadRequestError("invalid email address")
 	}
 	user.Password = strings.TrimSpace(user.Password)
 	if user.Password == "" {
-		return errors.BadRequest("invalid password")
+		return errors.BadRequestError("invalid password")
 	}
 	return nil
 }

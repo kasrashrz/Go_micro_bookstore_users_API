@@ -7,7 +7,22 @@ import (
 	"github.com/kasrashrz/Golang_microservice/utils/errors"
 )
 
-func CreateUser(user users.User) (*users.User, *errors.RestErr) {
+var (
+	UsersService userServiceInterface = &usersService{}
+)
+
+type usersService struct{}
+
+type userServiceInterface interface {
+	CreateUser(user users.User) (*users.User, *errors.RestErr)
+	GetUser(userID int64) (*users.User, *errors.RestErr)
+	UpdateUser(isPartial bool, user users.User) (*users.User, *errors.RestErr)
+	DeleteUser(userID int64) *errors.RestErr
+	Search(status string) (users.Users, *errors.RestErr)
+	LoginUser(users.LoginRequest) (*users.User, *errors.RestErr)
+}
+
+func (service *usersService) CreateUser(user users.User) (*users.User, *errors.RestErr) {
 	if err := user.Validate(); err != nil {
 		return nil, err
 	}
@@ -22,7 +37,7 @@ func CreateUser(user users.User) (*users.User, *errors.RestErr) {
 	return &user, nil
 }
 
-func GetUser(userID int64) (*users.User, *errors.RestErr) {
+func (service *usersService) GetUser(userID int64) (*users.User, *errors.RestErr) {
 	result := &users.User{Id: userID}
 	if err := result.Get(); err != nil {
 		return nil, err
@@ -30,8 +45,8 @@ func GetUser(userID int64) (*users.User, *errors.RestErr) {
 	return result, nil
 }
 
-func UpdateUser(isPartial bool, user users.User) (*users.User, *errors.RestErr) {
-	current, err := GetUser(user.Id)
+func (service *usersService) UpdateUser(isPartial bool, user users.User) (*users.User, *errors.RestErr) {
+	current, err := service.GetUser(user.Id)
 	if err != nil {
 		return nil, err
 	}
@@ -61,8 +76,8 @@ func UpdateUser(isPartial bool, user users.User) (*users.User, *errors.RestErr) 
 	return current, nil
 }
 
-func DeleteUser(userID int64) *errors.RestErr {
-	current, err := GetUser(userID)
+func (service *usersService) DeleteUser(userID int64) *errors.RestErr {
+	current, err := service.GetUser(userID)
 	if err != nil {
 		return err
 	}
@@ -72,7 +87,19 @@ func DeleteUser(userID int64) *errors.RestErr {
 	return nil
 }
 
-func Search(status string) (users.Users, *errors.RestErr) {
+func (service *usersService) Search(status string) (users.Users, *errors.RestErr) {
 	dao := users.User{}
 	return dao.FindByStatus(status)
+}
+
+func (service *usersService) LoginUser(request users.LoginRequest) (*users.User, *errors.RestErr) {
+	dao := &users.User{
+		Email:    request.Email,
+		Password: request.Password,
+	}
+	if err := dao.FindByEmailAndPassword(); err != nil {
+		return nil, err
+	}
+
+	return dao, nil
 }

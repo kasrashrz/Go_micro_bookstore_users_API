@@ -20,7 +20,7 @@ func ParseError(err error) *errors.RestErr {
 	}
 	switch sqlErr.Number {
 	case 1062:
-		return errors.BadRequest("The data has inserted before")
+		return errors.BadRequestError("The data has inserted before")
 
 	}
 	return errors.InternalServerError("error parsing request")
