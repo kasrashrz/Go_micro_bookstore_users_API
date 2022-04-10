@@ -3,6 +3,7 @@ package user
 import (
 	"github.com/gin-gonic/gin"
 	"github.com/kasrashrz/Golang_microservice/domain/users"
+	"github.com/kasrashrz/"
 	"github.com/kasrashrz/Golang_microservice/services"
 	"github.com/kasrashrz/Golang_microservice/utils/errors"
 	"github.com/kasrashrz/Golang_microservice/utils/functionalities"
@@ -27,6 +28,9 @@ func Create(ctx *gin.Context) {
 }
 
 func Read(ctx *gin.Context) {
+	if oath.Ispublic != true {
+
+	}
 	userId, userErr := functionalities.GetUserID(ctx.Param("user_id"))
 	if userErr != nil {
 		ctx.JSON(userErr.Status, userErr)

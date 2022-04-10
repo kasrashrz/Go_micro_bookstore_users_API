@@ -15,7 +15,7 @@ const (
 	queryReadOneUser        = "SELECT id, first_name, last_name, email, date_created, status FROM users WHERE id = ?;"
 	queryDeleteOneUser      = "DELETE FROM users WHERE id = ?;"
 	queryFindByStatus       = "SELECT id, first_name, last_name, email, date_created, status FROM users WHERE status = ?;"
-	queryFindByEmailAndPass = "SELECT first_name, last_name, email, date_created, status FROM users WHERE email = ? AND password = ?;"
+	queryFindByEmailAndPass = "SELECT id, first_name, last_name, email, date_created, status FROM users WHERE email = ? AND password = ? AND status = ?;"
 )
 
 func (user *User) Get() *errors.RestErr {
@@ -143,20 +143,21 @@ func (user *User) FindByStatus(status string) ([]User, *errors.RestErr) {
 func (user *User) FindByEmailAndPassword() *errors.RestErr {
 	statement, err := Client.Prepare(queryFindByEmailAndPass)
 	if err != nil {
-		logger.Error("error when trying to prepare get user statement", err)
+		logger.Error("error when trying to prepare get user by email and password", err)
 		return errors.InternalServerError("something went wrong")
 	}
 	defer statement.Close()
 
-	queryResult := statement.QueryRow(user.Email, crypto_utils.GetMd5(user.Password))
+	queryResult := statement.QueryRow(user.Email, crypto_utils.GetMd5(user.Password), StatusActive)
 
 	if readErr := queryResult.Scan(
+		&user.Id,
 		&user.Firstname,
 		&user.Lastname,
 		&user.Email,
 		&user.DateCreated,
 		&user.Status,
-	); readErr != nil {
+	); readErr != nil{
 		//logger.Error("error when trying to get user by id", readErr)
 		return errors.NotFoundError("user not found")
 	}

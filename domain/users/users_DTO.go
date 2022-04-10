@@ -7,6 +7,7 @@ import (
 
 const (
 	StatusActive = "active"
+	StatusUsed = "used"
 )
 
 type User struct {
