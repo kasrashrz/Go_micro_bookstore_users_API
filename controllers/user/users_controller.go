@@ -2,8 +2,8 @@ package user
 
 import (
 	"github.com/gin-gonic/gin"
+	"github.com/kasrashrz/Go_micro_bookstore_OAth-go/oath"
 	"github.com/kasrashrz/Golang_microservice/domain/users"
-	"github.com/kasrashrz/"
 	"github.com/kasrashrz/Golang_microservice/services"
 	"github.com/kasrashrz/Golang_microservice/utils/errors"
 	"github.com/kasrashrz/Golang_microservice/utils/functionalities"
@@ -28,8 +28,8 @@ func Create(ctx *gin.Context) {
 }
 
 func Read(ctx *gin.Context) {
-	if oath.Ispublic != true {
-
+	if err := oath.AuthenticateRequest(ctx.Request); err != nil {
+		ctx.JSON(err.Status, err)
 	}
 	userId, userErr := functionalities.GetUserID(ctx.Param("user_id"))
 	if userErr != nil {
@@ -98,7 +98,7 @@ func Search(ctx *gin.Context) {
 	return
 }
 
-func Login(ctx *gin.Context){
+func Login(ctx *gin.Context) {
 	var request users.LoginRequest
 	if err := ctx.ShouldBindJSON(&request); err != nil {
 		restError := errors.BadRequestError("invalid json body")
