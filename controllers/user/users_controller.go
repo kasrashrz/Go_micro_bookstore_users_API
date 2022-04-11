@@ -11,6 +11,14 @@ import (
 	"strconv"
 )
 
+func getUserId(userIdParam string) (int64, *errors.RestErr) {
+	userId, userErr := strconv.ParseInt(userIdParam, 10, 64)
+	if userErr != nil {
+		return 0, errors.BadRequestError("user id should be a number")
+	}
+	return userId, nil
+}
+
 func Create(ctx *gin.Context) {
 	var user users.User
 	if err := ctx.ShouldBindJSON(&user); err != nil {
@@ -23,28 +31,33 @@ func Create(ctx *gin.Context) {
 		ctx.JSON(saveErr.Status, saveErr)
 		return
 	}
-	ctx.JSON(http.StatusOK, result.Marshall(ctx.GetHeader("X-Public") == "true"))
 
+	ctx.JSON(http.StatusOK, result.Marshall(ctx.GetHeader("X-Public") == "true"))
+	return
 }
 
 func Read(ctx *gin.Context) {
 	if err := oath.AuthenticateRequest(ctx.Request); err != nil {
-		ctx.JSON(err.Status, err)
-	}
-	userId, userErr := functionalities.GetUserID(ctx.Param("user_id"))
-	if userErr != nil {
-		ctx.JSON(userErr.Status, userErr)
+		ctx.JSON(err.Status(), err)
 		return
 	}
 
-	result, err := services.UsersService.GetUser(userId)
-	if err != nil {
-		ctx.JSON(err.Status, err)
+	userId, idErr := getUserId(ctx.Param("user_id"))
+	if idErr != nil {
+		ctx.JSON(idErr.Status, idErr)
+		return
+	}
+	user, getErr := services.UsersService.GetUser(userId)
+	if getErr != nil {
+		ctx.JSON(getErr.Status, getErr)
 		return
 	}
 
-	ctx.JSON(http.StatusOK, result.Marshall(ctx.GetHeader("X-Public") == "true"))
-	return
+	if oath.GetCallerId(ctx.Request) == user.Id {
+		ctx.JSON(http.StatusOK, user.Marshall(false))
+		return
+	}
+	ctx.JSON(http.StatusOK, user.Marshall(oath.IsPublic(ctx.Request)))
 }
 
 func Update(ctx *gin.Context) {
